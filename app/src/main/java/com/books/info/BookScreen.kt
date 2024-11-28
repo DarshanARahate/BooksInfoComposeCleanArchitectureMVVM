@@ -1,6 +1,7 @@
 package com.books.info
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -12,6 +13,7 @@ import androidx.compose.material.ContentAlpha
 import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -21,23 +23,30 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun BookScreen() {
+    val viewModel: BookTrackerViewModel = viewModel()
+
     LazyColumn(
         contentPadding = PaddingValues(
             vertical = 8.dp,
             horizontal = 6.dp
         )
     ) {
-        items(mockBookList) { book ->
-            BookItem(book)
+        items(viewModel.state.value) { book ->
+            BookItem(book) { id ->
+                viewModel.toggleFinished(id = id)
+            }
         }
     }
 }
 
 @Composable
-fun BookItem(book: Book) {
+fun BookItem(book: Book, onClick: (id: Int) -> Unit) {
+    val icon = if (book.finished) Icons.Default.Check else Icons.Default.Clear
+
     Card(
         elevation = 10.dp,
         modifier = Modifier.padding(8.dp)
@@ -46,10 +55,13 @@ fun BookItem(book: Book) {
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(8.dp)
         ) {
-            BookIcon(
-                Icons.Default.Check,
+
+            FinishedIcon(
+                icon,
                 Modifier.weight(0.15f)
-            )
+            ) {
+                onClick(book.id)
+            }
             BookDetails(
                 book.title,
                 book.author,
@@ -60,7 +72,11 @@ fun BookItem(book: Book) {
 }
 
 @Composable
-fun BookDetails(title: String, author: String, modifier: Modifier) {
+fun BookDetails(
+    title: String,
+    author: String,
+    modifier: Modifier
+) {
     Column(modifier = modifier) {
         Text(
             text = title,
@@ -76,10 +92,18 @@ fun BookDetails(title: String, author: String, modifier: Modifier) {
 }
 
 @Composable
-fun BookIcon(icon: ImageVector, modifier: Modifier) {
+fun FinishedIcon(
+    icon: ImageVector,
+    modifier: Modifier,
+    onClick: () -> Unit
+) {
     Image(
         imageVector = icon,
         contentDescription = "Book Icon",
-        modifier = Modifier.padding(6.dp)
+        modifier = modifier
+            .padding(6.dp)
+            .clickable {
+                onClick()
+            }
     )
 }
