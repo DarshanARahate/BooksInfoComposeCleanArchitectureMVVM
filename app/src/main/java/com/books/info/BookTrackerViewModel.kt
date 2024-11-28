@@ -1,19 +1,24 @@
 package com.books.info
 
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.books.info.Constants.BASE_URL
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-class BookTrackerViewModel() : ViewModel() {
+class BookTrackerViewModel(private val stateHandle: SavedStateHandle) : ViewModel() {
 
     val state = mutableStateOf(emptyList<Book>())
     private var api: BooksApi
-    private lateinit var booksCall: Call<List<Book>>
+    private val errorHandler = CoroutineExceptionHandler { _, e ->
+        e.printStackTrace()
+    }
 
     init {
         val retrofit: Retrofit = Retrofit.Builder()
@@ -25,25 +30,29 @@ class BookTrackerViewModel() : ViewModel() {
     }
 
     private fun getBooks() {
-        booksCall = api.getBooks()
-        booksCall.enqueue(
-            object : Callback<List<Book>> {
-                override fun onFailure(call: Call<List<Book>>, t: Throwable) {
-                    t.printStackTrace()
-                }
-
-                override fun onResponse(call: Call<List<Book>>, response: Response<List<Book>>) {
-                    response.body()?.let { books ->
-                        state.value = books
-                    }
-                }
-            }
-        )
+        viewModelScope.launch(errorHandler) {
+            val books = getRemoteBooks()
+            state.value = books.restoreFinishedField()
+        }
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        booksCall.cancel()
+    private suspend fun getRemoteBooks(): List<Book> {
+        return withContext(Dispatchers.IO) {
+            api.getBooks()
+        }
+    }
+
+    private fun List<Book>.restoreFinishedField() : List<Book> {
+        stateHandle.get<List<Int>?>("finished") ?.let { selectedIds ->
+            val booksMap = this.associateBy {
+                it.id
+            }
+            selectedIds.forEach { id ->
+                booksMap[id]?.finished = true
+            }
+            return booksMap.values.toList()
+        }
+        return this
     }
 
     fun toggleFinished(id: Int) {
