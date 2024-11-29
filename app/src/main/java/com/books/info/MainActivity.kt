@@ -12,6 +12,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.books.info.ui.theme.BooksInfoComposeCleanArchitectureMVVMTheme
 
 class MainActivity : ComponentActivity() {
@@ -22,10 +27,30 @@ class MainActivity : ComponentActivity() {
             BooksInfoComposeCleanArchitectureMVVMTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Column(modifier = Modifier.padding(innerPadding)) {
-                        BookScreen()
+                        BookTrackerApp()
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun BookTrackerApp() {
+    val navController = rememberNavController()
+    NavHost(navController = navController, startDestination = "books") {
+        composable(route = "books") {
+            BookScreen() { id ->
+                navController.navigate("books/$id")
+            }
+        }
+        composable(
+            route = "books/{book_id}",
+            arguments = listOf(navArgument("book_id") {
+                type = NavType.IntType
+            })
+        ) {
+            BookDetailsScreen()
         }
     }
 }

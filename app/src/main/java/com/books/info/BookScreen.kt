@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
-fun BookScreen() {
+fun BookScreen(onItemClick: (id: Int) -> Unit = {}) {
     val viewModel: BookTrackerViewModel = viewModel()
 
     LazyColumn(
@@ -36,15 +36,21 @@ fun BookScreen() {
         )
     ) {
         items(viewModel.state.value) { book ->
-            BookItem(book) { id ->
-                viewModel.toggleFinished(id = id)
-            }
+            BookItem(
+                book,
+                onFinishedClick = { id -> viewModel.toggleFinished(id) },
+                onItemClick = { id -> onItemClick(id) }
+            )
         }
     }
 }
 
 @Composable
-fun BookItem(book: Book, onClick: (id: Int) -> Unit) {
+fun BookItem(
+    book: Book,
+    onFinishedClick: (id: Int) -> Unit,
+    onItemClick: (id: Int) -> Unit
+) {
     val icon = if (book.finished) Icons.Default.Check else Icons.Default.Clear
 
     Card(
@@ -53,14 +59,17 @@ fun BookItem(book: Book, onClick: (id: Int) -> Unit) {
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier
+                .padding(8.dp)
+                .clickable {
+                    onItemClick(book.id)
+                }
         ) {
-
             FinishedIcon(
                 icon,
                 Modifier.weight(0.15f)
             ) {
-                onClick(book.id)
+                onFinishedClick(book.id)
             }
             BookDetails(
                 book.title,
@@ -75,9 +84,13 @@ fun BookItem(book: Book, onClick: (id: Int) -> Unit) {
 fun BookDetails(
     title: String,
     author: String,
-    modifier: Modifier
+    modifier: Modifier,
+    horizantalAlignment: Alignment.Horizontal = Alignment.Start
 ) {
-    Column(modifier = modifier) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = horizantalAlignment
+    ) {
         Text(
             text = title,
             fontSize = 20.sp,
