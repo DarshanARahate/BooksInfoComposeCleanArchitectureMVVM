@@ -1,4 +1,4 @@
-package com.books.info
+package com.books.info.books.presentation.bookdetails
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,21 +15,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.books.info.books.presentation.booklist.BookDetails
+import com.books.info.books.presentation.booklist.FinishedIcon
 
 @Composable
-fun BookDetailsScreen() {
-    val viewModel: BookDetailsViewModel = viewModel()
-
-    val book = viewModel.state.value
-    if (book != null) {
+fun BookDetailsScreen(state: BookDetailsScreenState) {
+    if (state.book != null) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            val icon = if (book.finished) Icons.Default.Check else Icons.Default.Clear
+            val icon = if (state.book.finished) Icons.Default.Check else Icons.Default.Clear
 
             FinishedIcon(
                 icon = icon,
@@ -37,18 +35,16 @@ fun BookDetailsScreen() {
                 onClick = {})
 
             BookDetails(
-                title = book.title, author = book.author, modifier = Modifier,
+                title = state.book.title, author = state.book.author, modifier = Modifier,
                 horizantalAlignment = Alignment.CenterHorizontally
             )
 
             AdditionalDetails(
-                genre = book.genre,
-                series = book.series
+                genre = state.book.genre,
+                series = state.book.series
             )
-
         }
     }
-
 }
 
 @Composable
@@ -57,7 +53,6 @@ fun AdditionalDetails(
     modifier: Modifier = Modifier.padding(32.dp),
     horizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally
 ) {
-
     CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
         Text(
             text = genre,

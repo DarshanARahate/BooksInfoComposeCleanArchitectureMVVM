@@ -1,12 +1,10 @@
-package com.books.info
+package com.books.info.books.data.local
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.PrimaryKey
 
 @Entity
-class PartialBook_finished(
-    @PrimaryKey
+class PartialLocalBook_finished(
     @ColumnInfo(name = "r_id")
     val id: Int,
     @ColumnInfo(name = "r_finished")
